@@ -127,7 +127,7 @@ class UrlControllerTest {
             .thenReturn("https://example.com/redirect-target");
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/aB12Cd"))
+        mockMvc.perform(get("/api/v1/r/aB12Cd"))
             .andExpect(status().isFound())
             .andExpect(header().string("Location", "https://example.com/redirect-target"));
 
@@ -142,7 +142,7 @@ class UrlControllerTest {
             .thenThrow(new com.mks.open.exception.UrlNotFoundException("Short URL not found: invalid"));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/invalid"))
+        mockMvc.perform(get("/api/v1/r/invalid"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Not Found"));
@@ -193,15 +193,15 @@ class UrlControllerTest {
     @DisplayName("Should validate short code format")
     void redirect_InvalidFormat_ReturnsBadRequest() throws Exception {
         // Act & Assert - code too short
-        mockMvc.perform(get("/api/v1/abc"))
+        mockMvc.perform(get("/api/v1/r/abc"))
             .andExpect(status().is4xxClientError());
 
         // Act & Assert - code too long
-        mockMvc.perform(get("/api/v1/abcde1234"))
+        mockMvc.perform(get("/api/v1/r/abcde1234"))
             .andExpect(status().is4xxClientError());
 
         // Act & Assert - invalid characters
-        mockMvc.perform(get("/api/v1/abc!@#"))
+        mockMvc.perform(get("/api/v1/r/abc!@#"))
             .andExpect(status().is4xxClientError());
     }
 }

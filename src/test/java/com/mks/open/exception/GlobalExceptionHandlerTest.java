@@ -35,7 +35,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle invalid short code format with 400")
     void testInvalidShortCodeFormat() throws Exception {
-        mockMvc.perform(get("/api/v1/abc"))
+        mockMvc.perform(get("/api/v1/r/abc"))
             .andExpect(status().is4xxClientError());
     }
 }

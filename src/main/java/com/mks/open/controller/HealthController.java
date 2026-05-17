@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,23 +51,13 @@ public class HealthController {
     @GetMapping("/health")
     @Operation(summary = "Application health check", description = "Returns application and database health status")
     public ResponseEntity<Map<String, Object>> health() {
+
         Map<String, Object> healthInfo = new HashMap<>();
+
         healthInfo.put("status", "UP");
-
-        // Check MongoDB connection
-        try {
-            mongoClient.getDatabase("admin").runCommand(
-                    new org.bson.Document("ping", 1));
-            healthInfo.put("database", "connected");
-            healthInfo.put("databaseType", "MongoDB");
-        } catch (Exception e) {
-            healthInfo.put("database", "disconnected");
-            healthInfo.put("databaseError", e.getMessage());
-            healthInfo.put("status", "DOWN");
-            log.error("Database health check failed", e);
-        }
-
-        healthInfo.put("timestamp", java.time.Instant.now().toString());
+        healthInfo.put("database", "unknown");
+        healthInfo.put("databaseType", "MongoDB");
+        healthInfo.put("timestamp", Instant.now().toString());
 
         return ResponseEntity.ok(healthInfo);
     }

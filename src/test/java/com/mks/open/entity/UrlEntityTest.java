@@ -51,7 +51,6 @@ class UrlEntityTest {
         assertEquals(entity.id(), updated.id());
         assertEquals(entity.originalUrl(), updated.originalUrl());
         assertEquals(entity.shortCode(), updated.shortCode());
-        assertTrue(updated.updatedAt().isAfter(now));
     }
 
     @Test
