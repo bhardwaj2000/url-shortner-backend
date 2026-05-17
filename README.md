@@ -1,5 +1,7 @@
 # URL Shortener Backend - Production-Ready Application
-The application is live on `https://url-shortner-backend-v5oa.onrender.com//swagger-ui/index.html#/`.
+
+## Live Demo 👉 [url-shortner-live](https://url-shortner-backend-v5oa.onrender.com/)
+
 A production-grade URL shortener application built with Java 21, Spring Boot 3.x, and MongoDB.
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
