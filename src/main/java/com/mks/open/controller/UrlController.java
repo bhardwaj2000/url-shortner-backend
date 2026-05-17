@@ -81,7 +81,7 @@ public class UrlController {
      * @param shortCode the short code to redirect
      * @return HTTP 302 redirect response
      */
-    @GetMapping("/{shortCode}")
+    @GetMapping("/r/{shortCode}")
     @Operation(summary = "Redirect to original URL", description = "Redirects from short code to original URL")
     public ResponseEntity<Void> redirect(
             @PathVariable @NotBlank @Pattern(regexp = "^[a-zA-Z0-9]{6,8}$") String shortCode) {
