@@ -3,11 +3,11 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.claude
 
-# Docker
+# project file
 docker-compose.yml
 requirement.txt
-
 
 ### STS ###
 .apt_generated

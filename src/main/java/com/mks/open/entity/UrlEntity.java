@@ -31,7 +31,7 @@ import java.time.Instant;
 public record UrlEntity(
         @Id String id,
         String originalUrl,
-        @Indexed(unique = true) String shortCode,
+        String shortCode,
         int clickCount,
         Instant createdAt,
         Instant updatedAt

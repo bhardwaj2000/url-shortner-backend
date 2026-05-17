@@ -5,7 +5,7 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017}
       database: ${MONGODB_DATABASE:mks-local-db}
-      auto-index-creation: true
+      auto-index-creation: false
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
