@@ -7,6 +7,8 @@ import com.mks.open.exception.UrlNotFoundException;
 import com.mks.open.repository.UrlRepository;
 import java.time.Instant;
 import java.util.Optional;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,10 +47,13 @@ class UrlServiceTest {
     private UrlRequestDto validRequest;
     private UrlEntity testEntity;
 
+    private final HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+
     @BeforeEach
     void setUp() {
         validRequest = new UrlRequestDto("https://example.com/very/long/url/path");
-
+        when(mockRequest.getRequestURL())
+                .thenReturn(new StringBuffer("http://localhost:8080/api/v1/urls"));
         testEntity = new UrlEntity(
                 "1234567890",
                 "https://example.com/very/long/url/path",
@@ -79,7 +84,7 @@ class UrlServiceTest {
                 .thenReturn(Optional.empty());
 
         // Act
-        UrlResponseDto response = urlService.createShortUrl(validRequest);
+        UrlResponseDto response = urlService.createShortUrl(validRequest, mockRequest);
 
         // Assert
         assertNotNull(response);
@@ -101,7 +106,7 @@ class UrlServiceTest {
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> urlService.createShortUrl(invalidRequest)
+                () -> urlService.createShortUrl(invalidRequest, mockRequest)
         );
 
         assertTrue(exception.getMessage().contains("Invalid URL"));
@@ -116,7 +121,7 @@ class UrlServiceTest {
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> urlService.createShortUrl(nullRequest)
+                () -> urlService.createShortUrl(nullRequest, mockRequest)
         );
 
         assertTrue(exception.getMessage().contains("cannot be null or empty"));
@@ -224,7 +229,7 @@ class UrlServiceTest {
                 .thenReturn(java.util.Optional.of(existingEntity));
 
         // Act
-        UrlResponseDto response = urlService.createShortUrl(request);
+        UrlResponseDto response = urlService.createShortUrl(request, mockRequest);
 
         // Assert
         assertEquals(existingCode, response.shortCode());
@@ -240,7 +245,7 @@ class UrlServiceTest {
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> urlService.createShortUrl(emptyRequest)
+                () -> urlService.createShortUrl(emptyRequest, mockRequest)
         );
 
         assertTrue(exception.getMessage().contains("cannot be null or empty"));
@@ -255,7 +260,7 @@ class UrlServiceTest {
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> urlService.createShortUrl(invalidRequest)
+                () -> urlService.createShortUrl(invalidRequest, mockRequest)
         );
 
         assertTrue(exception.getMessage().contains("host"));

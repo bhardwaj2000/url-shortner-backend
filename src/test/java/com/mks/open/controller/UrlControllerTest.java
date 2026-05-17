@@ -5,6 +5,7 @@ import com.mks.open.dto.UrlResponseDto;
 import com.mks.open.exception.GlobalExceptionHandler;
 import com.mks.open.service.UrlService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,7 +64,7 @@ class UrlControllerTest {
         UrlRequestDto request = new UrlRequestDto("https://example.com/very/long/url");
 
         // Act & Assert
-        when(urlService.createShortUrl(any(UrlRequestDto.class)))
+        when(urlService.createShortUrl(any(UrlRequestDto.class), any(HttpServletRequest.class)))
             .thenReturn(testResponse);
 
         mockMvc.perform(post("/api/v1/urls")
@@ -75,7 +76,7 @@ class UrlControllerTest {
             .andExpect(jsonPath("$.shortUrl").value(testResponse.shortUrl()))
             .andExpect(jsonPath("$.createdAt").isNotEmpty());
 
-        verify(urlService, times(1)).createShortUrl(any(UrlRequestDto.class));
+        verify(urlService, times(1)).createShortUrl(any(UrlRequestDto.class), any(HttpServletRequest.class));
     }
 
     @Test
@@ -86,7 +87,7 @@ class UrlControllerTest {
         // The controller uses @Valid on @RequestBody which triggers validation
         // "not-a-valid-url" is not blank but is not a valid URL format
         // Since it passes @NotBlank, it reaches the service which throws exception
-        when(urlService.createShortUrl(any(UrlRequestDto.class)))
+        when(urlService.createShortUrl(any(UrlRequestDto.class), any(HttpServletRequest.class)))
             .thenThrow(new IllegalArgumentException("Invalid URL format"));
 
         mockMvc.perform(post("/api/v1/urls")

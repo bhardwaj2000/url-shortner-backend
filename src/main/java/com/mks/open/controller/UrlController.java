@@ -5,6 +5,7 @@ import com.mks.open.dto.UrlResponseDto;
 import com.mks.open.service.UrlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -63,10 +64,10 @@ public class UrlController {
     @Operation(summary = "Create a shortened URL", description = "Generates a short code for the provided URL")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UrlResponseDto> createShortUrl(
-            @Valid @RequestBody UrlRequestDto request) {
+            @Valid @RequestBody UrlRequestDto request, HttpServletRequest httpRequest) {
 
-        log.info("Creating short URL for: {}", request.originalUrl());
-        UrlResponseDto response = urlService.createShortUrl(request);
+        log.info("Creating short URL for: {}", request.originalUrl(), httpRequest.getRequestURL());
+        UrlResponseDto response = urlService.createShortUrl(request, httpRequest);
         log.info("Created short URL with code: {}", response.shortCode());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

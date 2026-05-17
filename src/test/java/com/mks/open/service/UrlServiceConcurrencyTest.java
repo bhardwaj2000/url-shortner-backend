@@ -4,6 +4,7 @@ import com.mks.open.dto.UrlRequestDto;
 import com.mks.open.dto.UrlResponseDto;
 import com.mks.open.entity.UrlEntity;
 import com.mks.open.repository.UrlRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Integration tests for URL Service concurrency handling.
@@ -40,9 +43,11 @@ class UrlServiceConcurrencyTest {
     private UrlRepository urlRepository;
 
     private static final String TEST_URL = "https://github.com/example/very/long/url/path";
-
+    private final HttpServletRequest mockRequest = mock(HttpServletRequest.class);
     @BeforeEach
     void setUp() {
+        when(mockRequest.getRequestURL())
+                .thenReturn(new StringBuffer("http://localhost:8080/api/v1/urls"));
         urlRepository.deleteAll();
     }
 
@@ -61,7 +66,7 @@ class UrlServiceConcurrencyTest {
             new Thread(() -> {
                 try {
                     startLatch.await(); // Wait for all threads to be ready
-                    UrlResponseDto response = urlService.createShortUrl(request);
+                    UrlResponseDto response = urlService.createShortUrl(request, mockRequest);
 
                     if (firstShortCode.get() == null) {
                         firstShortCode.set(response.shortCode());
@@ -114,7 +119,7 @@ class UrlServiceConcurrencyTest {
                 try {
                     startLatch.await();
                     UrlRequestDto request = new UrlRequestDto(testUrls[index]);
-                    UrlResponseDto response = urlService.createShortUrl(request);
+                    UrlResponseDto response = urlService.createShortUrl(request, mockRequest);
                     shortCodes[index] = response.shortCode();
                 } catch (Exception e) {
                     fail("Exception during concurrent URL shortening: " + e.getMessage());
@@ -141,9 +146,9 @@ class UrlServiceConcurrencyTest {
     void testSequentialDuplicateUrlRequests() {
         UrlRequestDto request = new UrlRequestDto(TEST_URL);
 
-        UrlResponseDto response1 = urlService.createShortUrl(request);
-        UrlResponseDto response2 = urlService.createShortUrl(request);
-        UrlResponseDto response3 = urlService.createShortUrl(request);
+        UrlResponseDto response1 = urlService.createShortUrl(request, mockRequest);
+        UrlResponseDto response2 = urlService.createShortUrl(request, mockRequest);
+        UrlResponseDto response3 = urlService.createShortUrl(request, mockRequest);
 
         // All responses should have the same short code
         assertEquals(response1.shortCode(), response2.shortCode(),
@@ -161,7 +166,7 @@ class UrlServiceConcurrencyTest {
     void testConcurrentClickCountIncrement() throws InterruptedException {
         // First, create a shortened URL
         UrlRequestDto request = new UrlRequestDto(TEST_URL);
-        UrlResponseDto response = urlService.createShortUrl(request);
+        UrlResponseDto response = urlService.createShortUrl(request, mockRequest);
         String shortCode = response.shortCode();
 
         // Verify initial click count is 0
@@ -200,7 +205,7 @@ class UrlServiceConcurrencyTest {
     void testMixedConcurrentOperations() throws InterruptedException {
         // First create a URL
         UrlRequestDto request = new UrlRequestDto(TEST_URL);
-        UrlResponseDto response = urlService.createShortUrl(request);
+        UrlResponseDto response = urlService.createShortUrl(request, mockRequest);
         String shortCode = response.shortCode();
 
         int createThreads = 3;
@@ -215,7 +220,7 @@ class UrlServiceConcurrencyTest {
             new Thread(() -> {
                 try {
                     startLatch.await();
-                    urlService.createShortUrl(request);
+                    urlService.createShortUrl(request, mockRequest);
                 } catch (Exception e) {
                     fail("Exception during concurrent create: " + e.getMessage());
                 } finally {

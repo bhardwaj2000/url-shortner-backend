@@ -6,6 +6,7 @@ import com.mks.open.entity.UrlEntity;
 import com.mks.open.exception.UrlNotFoundException;
 import com.mks.open.repository.UrlRepository;
 import com.mks.open.util.Base62Util;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -76,7 +77,7 @@ public class UrlService {
       * @throws IllegalArgumentException if the original URL is invalid or malformed
       * @throws RuntimeException         if unable to generate a unique short code after retries
       */
-     public UrlResponseDto createShortUrl(UrlRequestDto request) {
+     public UrlResponseDto createShortUrl(UrlRequestDto request, HttpServletRequest httpRequest) {
          // Validate input
          validateUrl(request.originalUrl());
 
@@ -86,21 +87,21 @@ public class UrlService {
          if (existingUrl.isPresent()) {
              log.info("URL already shortened, returning existing short code: {} for URL: {}",
                      existingUrl.get().shortCode(), request.originalUrl());
-             return buildResponse(existingUrl.get());
+             return buildResponse(existingUrl.get(), httpRequest.getRequestURL().toString());
          }
 
          // Retry logic for collision handling when generating new short codes
          int retryCount = 0;
          while (retryCount < maxRetryAttempts) {
              try {
-                 return createShortUrlWithCode(request.originalUrl(), generateShortCode());
+                 return createShortUrlWithCode(request.originalUrl(), generateShortCode(), httpRequest.getRequestURL().toString());
              } catch (DataIntegrityViolationException e) {
                  // Another thread already saved this URL (race condition on idempotency check)
                  // Re-read the existing URL and return it
                  log.info("Concurrent URL shortening detected, returning existing short code for: {}", request.originalUrl());
                  var existing = urlRepository.findByOriginalUrl(request.originalUrl());
                  if (existing.isPresent()) {
-                     return buildResponse(existing.get());
+                     return buildResponse(existing.get(), httpRequest.getRequestURL().toString());
                  }
                  // If still not found, continue retrying with new code
                  retryCount++;
@@ -123,7 +124,7 @@ public class UrlService {
      * @param shortCode   the short code to use
      * @return a URL response DTO
      */
-    private UrlResponseDto createShortUrlWithCode(String originalUrl, String shortCode) {
+    private UrlResponseDto createShortUrlWithCode(String originalUrl, String shortCode, String requestUrl) {
         UrlEntity entity = new UrlEntity(
                 null,
                 originalUrl,
@@ -136,7 +137,7 @@ public class UrlService {
         UrlEntity savedEntity = urlRepository.save(entity);
         log.info("Created short URL with code: {} for URL: {}", shortCode, originalUrl);
 
-        return buildResponse(savedEntity);
+        return buildResponse(savedEntity, requestUrl);
     }
 
     /**
@@ -224,12 +225,13 @@ public class UrlService {
      * Builds a URL response DTO from an entity.
      *
      * @param entity the URL entity
+     * @param requestUrl
      * @return a URL response DTO
      */
-    private UrlResponseDto buildResponse(UrlEntity entity) {
+    private UrlResponseDto buildResponse(UrlEntity entity, String requestUrl) {
         return new UrlResponseDto(
                 entity.shortCode(),
-                "http://localhost:8080/api/v1/" + entity.shortCode(),
+                requestUrl.replace("urls","r/") + entity.shortCode(),
                 entity.originalUrl(),
                 entity.createdAt()
         );
