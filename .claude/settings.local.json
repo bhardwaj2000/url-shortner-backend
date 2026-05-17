@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cd /d springPractice/url-shortner-backend)",
-      "Bash(mvn test *)"
-    ]
-  }
-}

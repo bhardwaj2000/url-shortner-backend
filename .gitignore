@@ -4,10 +4,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .claude
+.mvn
 
 # project file
 docker-compose.yml
-requirement.txt
+docs/requirement.txt
 
 ### STS ###
 .apt_generated
