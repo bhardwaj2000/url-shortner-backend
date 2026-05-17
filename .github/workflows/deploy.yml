@@ -4,8 +4,48 @@ on:
   push:
     branches:
       - main
+    # Don't trigger this workflow when the push only contains Markdown changes
+    paths-ignore:
+      - '**/*.md'
 
 jobs:
+  detect-changes:
+    name: Detect Relevant Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_relevant_changes: ${{ steps.check.outputs.has_relevant_changes }}
+    steps:
+      - name: Checkout full repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine changed files
+        id: check
+        run: |
+          # On push events, GITHUB_EVENT_BEFORE contains previous commit
+          BEFORE=${{ github.event.before }}
+          AFTER=${{ github.sha }}
+          echo "Before: $BEFORE"
+          echo "After: $AFTER"
+
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            # Fallback: use list of files in the current commit
+            CHANGED=$(git show --name-only --pretty="" $AFTER || true)
+          else
+            CHANGED=$(git diff --name-only $BEFORE $AFTER || true)
+          fi
+
+          echo "Changed files:\n$CHANGED"
+
+          # Define relevant patterns: source, build, docker, pom, scripts, workflows
+          echo "$CHANGED" | grep -E '^(src/|pom.xml$|Dockerfile$|docker-compose.yml$|^mvnw$|\.github/workflows/|^dockerfile$|^\.github/)' >/dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "has_relevant_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_relevant_changes=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
     name: Build Application
     runs-on: ubuntu-latest
@@ -58,7 +98,11 @@ jobs:
   render-deploy:
     name: Trigger Render Deploy
     runs-on: ubuntu-latest
-    needs: docker
+    needs:
+      - docker
+      - detect-changes
+    # Only run deploy when relevant project files changed (src, pom.xml, Dockerfile, etc.)
+    if: needs.detect-changes.outputs.has_relevant_changes == 'true'
 
     steps:
       - name: Deploy to Render
