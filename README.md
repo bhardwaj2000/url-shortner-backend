@@ -49,8 +49,6 @@ A production-grade URL shortener application built with Java 21, Spring Boot 3.x
 ```
 src/main/java/com/mks/open/
 ├── config/                    # Configuration classes
-│   ├── AppConfig.java
-│   ├── MongoConfig.java
 │   └── OpenApiConfig.java
 ├── controller/                # REST API controllers
 │   ├── UrlController.java
@@ -149,7 +147,7 @@ The application will start on `http://localhost:8080`.
 
 ### 2. Redirect to Original URL
 
-**Endpoint**: `GET /{shortCode}`
+**Endpoint**: `GET /r/{shortCode}`
 
 **Response**: HTTP 302 Found with Location header set to original URL
 
